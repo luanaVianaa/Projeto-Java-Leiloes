@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ProdutosDAO {
 
@@ -19,11 +20,12 @@ public class ProdutosDAO {
     PreparedStatement prep;
     ResultSet resultset;
     ArrayList<ProdutosDTO> listagem = new ArrayList<>();
+      List<ProdutosDTO> produtosVendidos = new ArrayList<>();
 
     public int cadastrarProduto(ProdutosDTO produto) {
 
         conn = new conectaDAO().connectDB();
-         int status = 0;
+        int status = 0;
 
         try {
             prep = conn.prepareStatement("INSERT INTO produtos (nome, valor, status) VALUES(?,?,?)");
@@ -32,16 +34,12 @@ public class ProdutosDAO {
             prep.setInt(2, produto.getValor());
             prep.setString(3, produto.getStatus());
 
-           status = prep.executeUpdate();
-            if (status > 0) {
-                System.out.println("Produto cadastrado com sucesso.");
-            } else {
-                System.out.println("Falha ao cadastrar o produto.");
-            }
+            status = prep.executeUpdate();
+          
         } catch (SQLException ex) {
             System.out.println("Erro ao cadastrar o produto: " + ex.getMessage());
         } finally {
-           
+
             try {
                 if (prep != null) {
                     prep.close();
@@ -50,16 +48,15 @@ public class ProdutosDAO {
                 System.out.println("Erro ao fechar o PreparedStatement: " + ex.getMessage());
             }
         }
-          return status;
+        return status;
     }
-    
 
     public ArrayList<ProdutosDTO> listarProdutos() {
-       
+
         listagem.clear();
 
         try {
-            conn = new conectaDAO().connectDB(); // Obtém a conexão com o banco de dados
+            conn = new conectaDAO().connectDB();
             prep = conn.prepareStatement("SELECT * FROM produtos");
             resultset = prep.executeQuery();
 
@@ -75,7 +72,7 @@ public class ProdutosDAO {
         } catch (SQLException ex) {
             System.out.println("Erro ao listar os produtos: " + ex.getMessage());
         } finally {
-            // Fechar recursos (ResultSet e PreparedStatement)
+
             try {
                 if (resultset != null) {
                     resultset.close();
@@ -90,4 +87,54 @@ public class ProdutosDAO {
 
         return listagem;
     }
+
+    public int venderProduto(int id) throws SQLException {
+        conn = new conectaDAO().connectDB();
+        int status;
+
+        String sql = "UPDATE produtos SET status = ? WHERE id = ?";
+
+        try ( PreparedStatement prep = conn.prepareStatement(sql)) {
+
+            prep.setString(1, "vendido");
+            prep.setInt(2, id);
+
+            status = prep.executeUpdate();
+            return status;
+         
+        } catch (SQLException ex) {
+            System.out.println(ex.getErrorCode());
+            return ex.getErrorCode();
+        }
+
+    }
+    
+
+    public List<ProdutosDTO> listarProdutosVendidos() throws SQLException {
+        
+         produtosVendidos.clear();
+        conn = new conectaDAO().connectDB();
+     
+
+         String sql = "SELECT * FROM produtos WHERE status = 'vendido'";
+
+        try ( PreparedStatement prep = conn.prepareStatement(sql)) {
+            resultset = prep.executeQuery();
+           
+            while (resultset.next()) {
+                ProdutosDTO produto = new ProdutosDTO();
+                produto.setId(resultset.getInt("id"));
+                produto.setNome(resultset.getString("nome"));
+                produto.setValor(resultset.getInt("valor"));
+                produto.setStatus(resultset.getString("status"));
+                produtosVendidos.add(produto);
+            }
+           
+
+        } catch (SQLException ex) {
+         
+        }
+         return produtosVendidos;
+    }
 }
+
