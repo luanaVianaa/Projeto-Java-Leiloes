@@ -153,7 +153,7 @@ public class cadastroVIEW extends javax.swing.JFrame {
         
         ProdutosDAO produtodao = new ProdutosDAO();
         
-        int resposta = produtodao.salvar(produto);
+        int resposta = produtodao.cadastrarProduto(produto);
         if(resposta == 1){
              JOptionPane.showMessageDialog(null,"Dados incluidos com sucesso");
                
